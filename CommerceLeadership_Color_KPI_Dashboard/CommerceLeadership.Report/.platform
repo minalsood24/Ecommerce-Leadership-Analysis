@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "CommerceLeadership"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "d7bd9912-b6fc-4a30-b9f9-f41977358358"
+  }
+}

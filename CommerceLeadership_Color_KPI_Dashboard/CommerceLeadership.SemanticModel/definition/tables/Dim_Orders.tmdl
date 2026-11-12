@@ -1,0 +1,122 @@
+table Dim_Orders
+	lineageTag: 04b4d903-fd35-7ebd-18f8-022dc168b116
+
+	column order_id
+		dataType: string
+		isHidden
+		lineageTag: e11d330e-aeae-621d-b35a-0d12724f99d6
+		summarizeBy: none
+		sourceColumn: order_id
+
+	column order_date
+		dataType: dateTime
+		isHidden
+		formatString: Short Date
+		lineageTag: dcfa2aad-ad4e-1c7d-7bdc-e7f1be4fb258
+		summarizeBy: none
+		sourceColumn: order_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column customer_id
+		dataType: string
+		isHidden
+		lineageTag: 70fad301-5f3f-6f5b-059a-4d1b2dd29f3b
+		summarizeBy: none
+		sourceColumn: customer_id
+
+	column order_status
+		dataType: string
+		lineageTag: a37bc9e8-4859-4199-ba4f-2347b103304b
+		summarizeBy: none
+		sourceColumn: order_status
+
+	column sales_channel
+		dataType: string
+		lineageTag: db2d340f-fb09-6366-f9b4-4ae292b5b790
+		summarizeBy: none
+		sourceColumn: sales_channel
+
+	column marketing_channel
+		dataType: string
+		lineageTag: 4449c62b-60c3-0ef7-435a-5472b185b2a1
+		summarizeBy: none
+		sourceColumn: marketing_channel
+
+	column payment_method
+		dataType: string
+		lineageTag: 26cae008-e31b-bbe5-eec5-91478d6f6164
+		summarizeBy: none
+		sourceColumn: payment_method
+
+	column payment_status
+		dataType: string
+		lineageTag: 7649ad56-7a66-c31e-c9cb-bb16ca548a91
+		summarizeBy: none
+		sourceColumn: payment_status
+
+	column shipping_method
+		dataType: string
+		lineageTag: 2b1d8c07-2644-a937-2202-cfc82fb1f621
+		summarizeBy: none
+		sourceColumn: shipping_method
+
+	column warehouse
+		dataType: string
+		lineageTag: 1e16ad3c-f826-f031-bc6a-e4e57f943e6b
+		summarizeBy: none
+		sourceColumn: warehouse
+
+	column delivery_status
+		dataType: string
+		lineageTag: db7773d5-8273-d45e-8843-6419b324e57a
+		summarizeBy: none
+		sourceColumn: delivery_status
+
+	column return_status
+		dataType: string
+		lineageTag: 9327fc76-2b96-ab01-57c1-3352771c9e4f
+		summarizeBy: none
+		sourceColumn: return_status
+
+	column return_reason
+		dataType: string
+		lineageTag: 324c051d-0549-8047-2843-6e47a8bcd1d2
+		summarizeBy: none
+		sourceColumn: return_reason
+
+	column delivery_days
+		dataType: double
+		isHidden
+		formatString: 0.0
+		lineageTag: a0595b30-2041-296c-1d61-cc82c8328a2a
+		summarizeBy: none
+		sourceColumn: delivery_days
+
+	column estimated_delivery_days
+		dataType: double
+		isHidden
+		formatString: 0.0
+		lineageTag: a66a4e11-7eb3-47b0-346d-3e0f705e8ef1
+		summarizeBy: none
+		sourceColumn: estimated_delivery_days
+
+	column customer_rating
+		dataType: double
+		isHidden
+		formatString: 0.0
+		lineageTag: 64d389ff-5073-4201-f9b0-a425d732cee3
+		summarizeBy: none
+		sourceColumn: customer_rating
+
+	partition Dim_Orders = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents(DataFolder & "\ecommerce_sales_customer_analytics_150k.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+					Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+					Kept = Table.SelectColumns(Headers, {"order_id", "order_date", "order_status", "customer_id", "sales_channel", "marketing_channel", "payment_method", "payment_status", "shipping_method", "warehouse", "delivery_days", "estimated_delivery_days", "delivery_status", "return_status", "return_reason", "customer_rating"}),
+					Typed = Table.TransformColumnTypes(Kept, {{"order_id", type text}, {"order_date", type date}, {"order_status", type text}, {"customer_id", type text}, {"sales_channel", type text}, {"marketing_channel", type text}, {"payment_method", type text}, {"payment_status", type text}, {"shipping_method", type text}, {"warehouse", type text}, {"delivery_days", type number}, {"estimated_delivery_days", type number}, {"delivery_status", type text}, {"return_status", type text}, {"return_reason", type text}, {"customer_rating", type number}}, "en-US")
+				in
+					Typed
+

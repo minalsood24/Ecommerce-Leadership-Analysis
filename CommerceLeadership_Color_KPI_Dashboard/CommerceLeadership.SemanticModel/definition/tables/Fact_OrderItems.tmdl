@@ -1,0 +1,153 @@
+table Fact_OrderItems
+	lineageTag: 96811f90-3dc9-59d1-4c57-7d4f02428a94
+
+	column order_id
+		dataType: string
+		isHidden
+		lineageTag: e11d330e-aeae-621d-b35a-0d12724f99d6
+		summarizeBy: none
+		sourceColumn: order_id
+
+	column product_id
+		dataType: string
+		isHidden
+		lineageTag: fb26b2da-175b-5287-6157-625c44f542ba
+		summarizeBy: none
+		sourceColumn: product_id
+
+	column quantity
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 8cd52f69-5cf3-7d74-0dcc-c4efc9012612
+		summarizeBy: none
+		sourceColumn: quantity
+
+	column unit_price
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		lineageTag: 9b94b941-6cf2-98f6-93d0-5da73476bd21
+		summarizeBy: none
+		sourceColumn: unit_price
+
+	column discount_percentage
+		dataType: double
+		isHidden
+		formatString: 0.0%
+		lineageTag: 0ab0c994-bab1-c698-6c18-bd4033b4eabc
+		summarizeBy: none
+		sourceColumn: discount_percentage
+
+	column discount_amount
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		lineageTag: b4ffc780-99da-4393-fcf6-c60d6729facc
+		summarizeBy: none
+		sourceColumn: discount_amount
+
+	column gross_sales
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		lineageTag: 6d024b1f-ddd5-0ebf-96dc-f5a1142789e2
+		summarizeBy: none
+		sourceColumn: gross_sales
+
+	column tax_amount
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		lineageTag: 1b634c45-2d32-62b9-8979-6f1f191cdc49
+		summarizeBy: none
+		sourceColumn: tax_amount
+
+	column shipping_cost
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		lineageTag: deed16b8-c08b-9cb3-cd3f-c53d93c28740
+		summarizeBy: none
+		sourceColumn: shipping_cost
+
+	column product_cost
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		lineageTag: bc108f64-6ce1-49f3-8a9f-cea860b6ccd3
+		summarizeBy: none
+		sourceColumn: product_cost
+
+	column src_net_sales
+		dataType: double
+		isHidden
+		lineageTag: f3545795-a9a3-d0b2-ebf2-1fdd82d209ad
+		summarizeBy: none
+		sourceColumn: src_net_sales
+
+	column src_profit
+		dataType: double
+		isHidden
+		lineageTag: 82c98048-4cc4-dcb9-ec8e-09f20bffc8a4
+		summarizeBy: none
+		sourceColumn: src_profit
+
+	column LineID
+		dataType: int64
+		isHidden
+		lineageTag: 232e392c-468e-798b-3f18-16f55a676b8d
+		summarizeBy: none
+		sourceColumn: LineID
+
+	column 'Line Net Sales'
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		lineageTag: 49158c4f-04cb-a8b9-91dd-80dbce630f35
+		summarizeBy: none
+		sourceColumn: Line Net Sales
+
+	column 'Line Profit'
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		lineageTag: b1a10e96-3b06-f1bc-0e47-db4789223026
+		summarizeBy: none
+		sourceColumn: Line Profit
+
+	column 'Discount Band Sort'
+		dataType: int64
+		isHidden
+		lineageTag: 8c34a26a-f41d-dc71-b2ee-a3d7bb36a835
+		summarizeBy: none
+		sourceColumn: Discount Band Sort
+
+	column 'Discount Band'
+		dataType: string
+		lineageTag: daa221f2-0978-bb38-77cc-83935e26b533
+		summarizeBy: none
+		sourceColumn: Discount Band
+		sortByColumn: 'Discount Band Sort'
+
+	partition Fact_OrderItems = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents(DataFolder & "\order_items.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+					Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+					Kept = Table.SelectColumns(Headers, {"order_id", "product_id", "quantity", "unit_price", "discount_percentage", "discount_amount", "gross_sales", "tax_amount", "shipping_cost", "net_sales", "product_cost", "profit"}),
+					Typed = Table.TransformColumnTypes(Kept, {{"order_id", type text}, {"product_id", type text}, {"quantity", Int64.Type}, {"unit_price", type number}, {"discount_percentage", type number}, {"discount_amount", type number}, {"gross_sales", type number}, {"tax_amount", type number}, {"shipping_cost", type number}, {"net_sales", type number}, {"product_cost", type number}, {"profit", type number}}, "en-US"),
+					Renamed = Table.RenameColumns(Typed, {{"net_sales", "src_net_sales"}, {"profit", "src_profit"}}),
+					Indexed = Table.AddIndexColumn(Renamed, "LineID", 1, 1, Int64.Type),
+					LineNet = Table.AddColumn(Indexed, "Line Net Sales", each [gross_sales] - [discount_amount], type number),
+					LineProfit = Table.AddColumn(LineNet, "Line Profit", each [Line Net Sales] - [product_cost], type number),
+					BandSort = Table.AddColumn(LineProfit, "Discount Band Sort", each List.Min({Number.RoundDown([discount_percentage] * 10), 5}), Int64.Type),
+					Final = Table.AddColumn(BandSort, "Discount Band", each Text.From([Discount Band Sort] * 10) & "-" & Text.From([Discount Band Sort] * 10 + 10) & "%", type text)
+				in
+					Final
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

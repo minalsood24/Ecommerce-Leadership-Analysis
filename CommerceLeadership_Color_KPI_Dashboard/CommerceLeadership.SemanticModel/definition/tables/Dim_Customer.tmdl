@@ -1,0 +1,95 @@
+table Dim_Customer
+	lineageTag: 7f608c70-05d2-f966-47e8-7da4d820f5ca
+
+	column customer_id
+		dataType: string
+		isHidden
+		lineageTag: 1dc2ef11-68b2-a99b-93a4-bd16850b6099
+		summarizeBy: none
+		sourceColumn: customer_id
+
+	column customer_segment
+		dataType: string
+		lineageTag: e88da6f1-255e-7959-2ba5-8ddf3307f90e
+		summarizeBy: none
+		sourceColumn: customer_segment
+
+	column customer_state
+		dataType: string
+		lineageTag: f0f9037c-fb93-dfd0-eccc-86b3ab213e86
+		summarizeBy: none
+		sourceColumn: customer_state
+
+	column region
+		dataType: string
+		lineageTag: 35511480-eebc-515d-c443-99f936ceb15c
+		summarizeBy: none
+		sourceColumn: region
+
+	column customer_country
+		dataType: string
+		lineageTag: 3caf0c13-a150-1667-9451-7e79591d92f6
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: customer_country
+
+	column customer_acquisition_cost
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		lineageTag: ef9fbf7b-5281-7d22-3bdf-e2f648c1399f
+		summarizeBy: none
+		sourceColumn: customer_acquisition_cost
+
+	column 'State Label' = Dim_Customer[customer_state] & " (" & Dim_Customer[customer_country] & ")"
+		dataType: string
+		lineageTag: 83f7084e-c60c-a08a-fb95-32402f04f1e0
+		summarizeBy: none
+
+	column 'First Order Date' = CALCULATE ( MIN ( Dim_Orders[order_date] ), Dim_Orders[order_status] = "Completed" )
+		dataType: dateTime
+		isHidden
+		formatString: Short Date
+		lineageTag: b3446839-5fd8-86f9-9b33-fd3797570dc0
+		summarizeBy: none
+
+	column 'Lifetime Orders' = COALESCE ( CALCULATE ( DISTINCTCOUNT ( Dim_Orders[order_id] ), Dim_Orders[order_status] = "Completed" ), 0 )
+		dataType: int64
+		isHidden
+		lineageTag: 0363bce8-38e3-34a4-3005-237c34b24a4a
+		summarizeBy: none
+
+	column 'Order Frequency Band Sort' = SWITCH ( TRUE (), [Lifetime Orders] = 0, 0, [Lifetime Orders] = 1, 1, [Lifetime Orders] <= 3, 2, [Lifetime Orders] <= 6, 3, [Lifetime Orders] <= 9, 4, 5 )
+		dataType: int64
+		isHidden
+		lineageTag: 23a9cc73-2f05-cc6a-693d-2bb705cce5bf
+		summarizeBy: none
+
+	column 'Order Frequency Band' = SWITCH ( [Order Frequency Band Sort], 0, "None", 1, "1 order", 2, "2-3", 3, "4-6", 4, "7-9", "10+" )
+		dataType: string
+		lineageTag: a2372cdf-8e46-07b4-cb2c-96d03b8ce54e
+		summarizeBy: none
+		sortByColumn: 'Order Frequency Band Sort'
+
+	hierarchy 'Country > State'
+		lineageTag: 9a54d244-1871-f41b-5077-dccc27bd07eb
+
+		level Country
+			lineageTag: 4a7156a5-b191-4161-1b3e-a208f251b489
+			column: customer_country
+
+		level State
+			lineageTag: d348b766-9a4c-a4a3-b136-13e8a534caa5
+			column: customer_state
+
+	partition Dim_Customer = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents(DataFolder & "\customer_master.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+					Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+					Kept = Table.SelectColumns(Headers, {"customer_id", "customer_segment", "customer_state", "customer_country", "region", "customer_acquisition_cost"}),
+					Typed = Table.TransformColumnTypes(Kept, {{"customer_id", type text}, {"customer_segment", type text}, {"customer_state", type text}, {"customer_country", type text}, {"region", type text}, {"customer_acquisition_cost", type number}}, "en-US")
+				in
+					Typed
+

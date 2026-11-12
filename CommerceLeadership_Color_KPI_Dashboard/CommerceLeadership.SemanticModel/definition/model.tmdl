@@ -1,0 +1,22 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["Fact_OrderItems","Dim_Orders","Dim_Customer","Dim_Product","_Measures","DataFolder"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table Fact_OrderItems
+ref table Dim_Orders
+ref table Dim_Customer
+ref table Dim_Product
+ref table Dim_Date
+ref table _Measures
+

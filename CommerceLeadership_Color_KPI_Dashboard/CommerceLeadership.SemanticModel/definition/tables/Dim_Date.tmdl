@@ -1,0 +1,68 @@
+table Dim_Date
+	lineageTag: fc54dc67-dc6b-8957-a1ef-a6722424c68d
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		lineageTag: 369244ff-c56b-7303-8419-7f04fedbbee4
+		summarizeBy: none
+		sourceColumn: [Date]
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 5e1cc17d-92ee-5990-c062-462bd64450fc
+		summarizeBy: none
+		sourceColumn: [Year]
+
+	column Quarter
+		dataType: string
+		lineageTag: c5f496e6-0775-2166-3298-1d91e98ec2be
+		summarizeBy: none
+		sourceColumn: [Quarter]
+
+	column 'Month #'
+		dataType: int64
+		isHidden
+		lineageTag: 03349505-f037-cb85-1090-e324d7fad52e
+		summarizeBy: none
+		sourceColumn: [Month #]
+
+	column Month
+		dataType: string
+		lineageTag: 289f7f7c-83b5-aa9d-985c-45c7f8558db1
+		summarizeBy: none
+		sourceColumn: [Month]
+		sortByColumn: 'Month #'
+
+	hierarchy 'Date Hierarchy'
+		lineageTag: fc15bfd3-bf22-181a-b444-7a4acd393451
+
+		level Year
+			lineageTag: 1faf6dbc-f454-0212-d699-2d7a8d07221b
+			column: Year
+
+		level Quarter
+			lineageTag: 69cdf0ae-2a90-377b-874f-61812b59a64d
+			column: Quarter
+
+		level Month
+			lineageTag: ab6696ac-4fb3-b68d-0e30-f77df02ba894
+			column: Month
+
+	partition Dim_Date = calculated
+		mode: import
+		source =
+				VAR y0 = YEAR ( MIN ( Dim_Orders[order_date] ) )
+				VAR y1 = YEAR ( MAX ( Dim_Orders[order_date] ) )
+				RETURN
+					ADDCOLUMNS (
+						CALENDAR ( DATE ( y0, 1, 1 ), DATE ( y1, 12, 31 ) ),
+						"Year", YEAR ( [Date] ),
+						"Quarter", "Q" & QUARTER ( [Date] ),
+						"Month #", MONTH ( [Date] ),
+						"Month", FORMAT ( [Date], "mmm" )
+					)
+

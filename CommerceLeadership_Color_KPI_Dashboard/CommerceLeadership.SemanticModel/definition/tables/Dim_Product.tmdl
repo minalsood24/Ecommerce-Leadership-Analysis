@@ -1,0 +1,97 @@
+table Dim_Product
+	lineageTag: f8025786-1c94-294c-b113-f5910be876d9
+
+	column product_id
+		dataType: string
+		isHidden
+		lineageTag: bc3bf5f5-cc13-70b1-ac82-2ff4e95ddfe6
+		summarizeBy: none
+		sourceColumn: product_id
+
+	column product_name
+		dataType: string
+		isHidden
+		lineageTag: 5d3ca01e-efdd-f7db-d261-ce1bb9fe1a16
+		summarizeBy: none
+		sourceColumn: product_name
+
+	column product_category
+		dataType: string
+		lineageTag: b983516e-2479-6c84-1bd9-ad67fc4f2353
+		summarizeBy: none
+		sourceColumn: product_category
+
+	column product_subcategory
+		dataType: string
+		lineageTag: 391a101c-4b7b-bca5-d558-bd2f6d6d5a8e
+		summarizeBy: none
+		sourceColumn: product_subcategory
+
+	column brand
+		dataType: string
+		lineageTag: d39184c0-ae51-eee9-7833-5538b400acfc
+		summarizeBy: none
+		sourceColumn: brand
+
+	column supplier
+		dataType: string
+		lineageTag: 8e5e253b-757b-f156-528d-fc26220d491d
+		summarizeBy: none
+		sourceColumn: supplier
+
+	column catalog_unit_price
+		dataType: double
+		isHidden
+		lineageTag: 2ed64801-008b-1b4a-fd79-dfa5c2bd7ea2
+		summarizeBy: none
+		sourceColumn: catalog_unit_price
+
+	column catalog_product_cost
+		dataType: double
+		isHidden
+		lineageTag: 634a087c-aab3-4128-8c1c-8f278dbf3c52
+		summarizeBy: none
+		sourceColumn: catalog_product_cost
+
+	column product_rating
+		dataType: double
+		isHidden
+		formatString: 0.0
+		lineageTag: 6ced57ea-0f08-d847-8955-bfb1afd88343
+		summarizeBy: none
+		sourceColumn: product_rating
+
+	column 'Product Label'
+		dataType: string
+		lineageTag: 1569fdbf-73cd-66f8-eede-4d9194012ef6
+		summarizeBy: none
+		sourceColumn: Product Label
+
+	hierarchy 'Product Hierarchy'
+		lineageTag: eccf049a-a36d-3f33-af63-ae3955286577
+
+		level Category
+			lineageTag: 5d7da031-5ee5-260f-d1e4-ae3ff0178308
+			column: product_category
+
+		level Subcategory
+			lineageTag: 1a31ff37-2899-cee1-ad1f-404905bea584
+			column: product_subcategory
+
+		level Product
+			lineageTag: b683c441-716e-c050-1fdc-45b778f7cb10
+			column: 'Product Label'
+
+	partition Dim_Product = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents(DataFolder & "\product_catalog.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+					Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+					Kept = Table.SelectColumns(Headers, {"product_id", "product_name", "product_category", "product_subcategory", "brand", "supplier", "unit_price", "product_cost", "product_rating"}),
+					Typed = Table.TransformColumnTypes(Kept, {{"product_id", type text}, {"product_name", type text}, {"product_category", type text}, {"product_subcategory", type text}, {"brand", type text}, {"supplier", type text}, {"unit_price", type number}, {"product_cost", type number}, {"product_rating", type number}}, "en-US"),
+					Renamed = Table.RenameColumns(Typed, {{"unit_price", "catalog_unit_price"}, {"product_cost", "catalog_product_cost"}}),
+					Final = Table.AddColumn(Renamed, "Product Label", each [brand] & " · " & [product_subcategory] & " · " & [product_id], type text)
+				in
+					Final
+

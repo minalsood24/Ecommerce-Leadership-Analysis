@@ -1,0 +1,16 @@
+relationship 40e725da-ce19-1642-9d53-b2f0ce4d5a56
+	fromColumn: Dim_Orders.order_date
+	toColumn: Dim_Date.Date
+
+relationship 69b8a7ea-bcb3-883c-7326-ef5c0d2afe74
+	fromColumn: Dim_Orders.customer_id
+	toColumn: Dim_Customer.customer_id
+
+relationship 64ba3c43-8f55-1aa8-c0a0-e18c79b61202
+	fromColumn: Fact_OrderItems.order_id
+	toColumn: Dim_Orders.order_id
+
+relationship 187e4af5-8653-ceeb-97f0-a57f13608964
+	fromColumn: Fact_OrderItems.product_id
+	toColumn: Dim_Product.product_id
+

@@ -1,0 +1,37 @@
+{
+  "name": "CommerceLeadership",
+  "dataColors": [
+    "#2878A5",
+    "#168A76",
+    "#DF922B",
+    "#7857A5",
+    "#CC5B50",
+    "#2B8B9C",
+    "#82B66C",
+    "#526B83"
+  ],
+  "background": "#EEF2F6",
+  "foreground": "#1C3449",
+  "tableAccent": "#2878A5",
+  "good": "#168A76",
+  "bad": "#CC5B50",
+  "neutral": "#657B8C",
+  "textClasses": {
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 11
+    },
+    "callout": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 24
+    },
+    "title": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 14
+    },
+    "header": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 12
+    }
+  }
+}

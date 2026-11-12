@@ -1,0 +1,404 @@
+table _Measures
+	lineageTag: d3fdb41f-e9d9-5bdf-679d-995b57ae2c43
+
+	measure 'Gross Sales' = CALCULATE ( SUM ( Fact_OrderItems[gross_sales] ), Dim_Orders[order_status] = "Completed" )
+		formatString: #,0.0,,"M"
+		displayFolder: 01 Core
+		lineageTag: 9cf1ee91-fe2d-f57c-fc8b-44575decb198
+
+	measure Discounts = CALCULATE ( SUM ( Fact_OrderItems[discount_amount] ), Dim_Orders[order_status] = "Completed" )
+		formatString: #,0.0,,"M"
+		displayFolder: 01 Core
+		lineageTag: 507e85b0-3c3b-2a1d-b69e-566e056ecdb1
+
+	measure 'Net Sales' = CALCULATE ( SUM ( Fact_OrderItems[Line Net Sales] ), Dim_Orders[order_status] = "Completed" )
+		formatString: #,0.0,,"M"
+		displayFolder: 01 Core
+		lineageTag: 30085924-8430-a931-a1dd-9d2b10e410f1
+
+	measure 'Product Cost' = CALCULATE ( SUM ( Fact_OrderItems[product_cost] ), Dim_Orders[order_status] = "Completed" )
+		formatString: #,0.0,,"M"
+		displayFolder: 01 Core
+		lineageTag: c2acf453-6111-de2e-0bb5-291f6a5b022b
+
+	measure Profit = CALCULATE ( SUM ( Fact_OrderItems[Line Profit] ), Dim_Orders[order_status] = "Completed" )
+		formatString: #,0.0,,"M"
+		displayFolder: 01 Core
+		lineageTag: fd414c2a-3095-bfa2-a34d-daad4994aa15
+
+	measure 'Profit Margin %' = DIVIDE ( [Profit], [Net Sales] )
+		formatString: 0.0%
+		displayFolder: 01 Core
+		lineageTag: c1303c14-b2f5-cf6f-3855-b1b49bf14b08
+
+	measure 'Discount Rate %' = DIVIDE ( [Discounts], [Gross Sales] )
+		formatString: 0.0%
+		displayFolder: 01 Core
+		lineageTag: e461b224-e576-d9c9-5e77-9602e5c73215
+
+	measure Orders = CALCULATE ( DISTINCTCOUNT ( Fact_OrderItems[order_id] ), Dim_Orders[order_status] = "Completed" )
+		formatString: #,0
+		displayFolder: 01 Core
+		lineageTag: 98957d82-4f31-2293-1a9c-391f7cce5d97
+
+	measure 'Units Sold' = CALCULATE ( SUM ( Fact_OrderItems[quantity] ), Dim_Orders[order_status] = "Completed" )
+		formatString: #,0
+		displayFolder: 01 Core
+		lineageTag: 9a594e65-d0b3-10d7-fd79-1805d272e6df
+
+	measure 'Avg Order Value' = DIVIDE ( [Net Sales], [Orders] )
+		formatString: #,0.0
+		displayFolder: 01 Core
+		lineageTag: c69457a5-5f47-4ee3-4c1b-150cb725e5a3
+
+	measure 'Net Sales % of Total' = DIVIDE ( [Net Sales], CALCULATE ( [Net Sales], ALLSELECTED () ) )
+		formatString: 0.0%
+		displayFolder: 01 Core
+		lineageTag: 6c768e55-7f22-baf6-b214-fd91ffce8db8
+
+	measure 'Profit % of Total' = DIVIDE ( [Profit], CALCULATE ( [Profit], ALLSELECTED () ) )
+		formatString: 0.0%
+		displayFolder: 01 Core
+		lineageTag: 0c24c682-bc16-a9e1-9257-c70a6c4755c2
+
+	measure 'Data Through' = MAX ( Dim_Orders[order_date] )
+		formatString: mmm yyyy
+		displayFolder: 01 Core
+		lineageTag: f2534320-dfdc-91ee-7723-ad9e83a97d46
+
+	measure 'Data Note' = "Completed orders · data through " & FORMAT ( [Data Through], "mmm yyyy" ) & " · reporting currency"
+		displayFolder: 01 Core
+		lineageTag: b61335b8-5fc1-7642-65f0-68994a01e3aa
+
+	measure 'Net Sales PY' = CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0.0,,"M"
+		displayFolder: 02 Time
+		lineageTag: f5df4ac8-c05f-2478-d2a6-bd0a9dc5083c
+
+	measure 'Profit PY' = CALCULATE ( [Profit], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0.0,,"M"
+		displayFolder: 02 Time
+		lineageTag: e5d048a6-7e08-f08d-81f2-b08115cd2de8
+
+	measure 'Net Sales YoY %' =
+			VAR py = CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+			RETURN DIVIDE ( [Net Sales] - py, py )
+		formatString: +0.0%;-0.0%
+		displayFolder: 02 Time
+		lineageTag: 83c46f09-44ec-4e90-003f-59c1996e1991
+
+	measure 'Net Sales YoY Label' =
+			VAR g = [Net Sales YoY %]
+			RETURN
+			IF ( NOT HASONEVALUE ( Dim_Date[Year] ), "Select one year",
+			IF ( ISBLANK ( g ), "No prior-year data",
+			IF ( g >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( g ), "0.0%" ) & " vs PY" ) )
+		displayFolder: 02 Time
+		lineageTag: 29a261d1-f112-96f5-e178-f2c726726877
+
+	measure 'Profit YoY %' =
+			VAR py = CALCULATE ( [Profit], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+			RETURN DIVIDE ( [Profit] - py, py )
+		formatString: +0.0%;-0.0%
+		displayFolder: 02 Time
+		lineageTag: 7e882195-277c-446d-62ec-67d538df76c1
+
+	measure 'Profit YoY Label' =
+			VAR g = [Profit YoY %]
+			RETURN
+			IF ( NOT HASONEVALUE ( Dim_Date[Year] ), "Select one year",
+			IF ( ISBLANK ( g ), "No prior-year data",
+			IF ( g >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( g ), "0.0%" ) & " vs PY" ) )
+		displayFolder: 02 Time
+		lineageTag: d23679c7-268d-a460-644c-e70754776274
+
+	measure 'Orders YoY %' =
+			VAR py = CALCULATE ( [Orders], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+			RETURN DIVIDE ( [Orders] - py, py )
+		formatString: +0.0%;-0.0%
+		displayFolder: 02 Time
+		lineageTag: 1f6c5eae-0333-279f-3fbc-0a77b15a39ec
+
+	measure 'Orders YoY Label' =
+			VAR g = [Orders YoY %]
+			RETURN
+			IF ( NOT HASONEVALUE ( Dim_Date[Year] ), "Select one year",
+			IF ( ISBLANK ( g ), "No prior-year data",
+			IF ( g >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( g ), "0.0%" ) & " vs PY" ) )
+		displayFolder: 02 Time
+		lineageTag: 82f17477-71bb-2a5d-3be7-b6caf4406b65
+
+	measure 'Units YoY %' =
+			VAR py = CALCULATE ( [Units Sold], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+			RETURN DIVIDE ( [Units Sold] - py, py )
+		formatString: +0.0%;-0.0%
+		displayFolder: 02 Time
+		lineageTag: 061be845-dbc8-a7cf-201f-8182c75beef0
+
+	measure 'Units YoY Label' =
+			VAR g = [Units YoY %]
+			RETURN
+			IF ( NOT HASONEVALUE ( Dim_Date[Year] ), "Select one year",
+			IF ( ISBLANK ( g ), "No prior-year data",
+			IF ( g >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( g ), "0.0%" ) & " vs PY" ) )
+		displayFolder: 02 Time
+		lineageTag: 18757019-fd87-8e84-22d2-4f178a21594b
+
+	measure 'AOV YoY %' =
+			VAR py = CALCULATE ( [Avg Order Value], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+			RETURN DIVIDE ( [Avg Order Value] - py, py )
+		formatString: +0.0%;-0.0%
+		displayFolder: 02 Time
+		lineageTag: e00e81c7-bea2-804e-01db-3b528e5ea057
+
+	measure 'AOV YoY Label' =
+			VAR g = [AOV YoY %]
+			RETURN
+			IF ( NOT HASONEVALUE ( Dim_Date[Year] ), "Select one year",
+			IF ( ISBLANK ( g ), "No prior-year data",
+			IF ( g >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( g ), "0.0%" ) & " vs PY" ) )
+		displayFolder: 02 Time
+		lineageTag: f6ad238d-5b95-d418-6c0a-07cc8d57c7cd
+
+	measure 'Margin Δ pts' =
+			VAR py = CALCULATE ( [Profit Margin %], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+			RETURN IF ( NOT ISBLANK ( py ), ( [Profit Margin %] - py ) * 100 )
+		formatString: +0.0;-0.0
+		displayFolder: 02 Time
+		lineageTag: 57d98764-47eb-10f9-dbf5-b9aa4a1ac926
+
+	measure 'Margin Δ Label' =
+			VAR g = [Margin Δ pts]
+			RETURN
+			IF ( NOT HASONEVALUE ( Dim_Date[Year] ), "Select one year",
+			IF ( ISBLANK ( g ), "No prior-year data",
+			IF ( g >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( g ), "0.0" ) & " pts vs PY" ) )
+		displayFolder: 02 Time
+		lineageTag: e33ed575-5501-bffc-bfb4-e326873b4f79
+
+	measure 'Headline Insight' =
+			VAR g = [Net Sales YoY %]
+			RETURN "Net sales " & FORMAT ( [Net Sales] / 1e6, "0.0" ) & "M, "
+			& IF ( ISBLANK ( g ), "no prior-year comparison", FORMAT ( g, "+0.0%;-0.0%" ) & " vs prior year" )
+			& ". Profit margin " & FORMAT ( [Profit Margin %], "0.0%" ) & ", discount rate " & FORMAT ( [Discount Rate %], "0.0%" ) & "."
+		displayFolder: 02 Time
+		lineageTag: bbfcadcc-1e64-c228-29a5-935404d7161c
+
+	measure 'Loss-Making Line Profit' = CALCULATE ( [Profit], Fact_OrderItems[Line Profit] < 0 )
+		formatString: #,0.00,,"M"
+		displayFolder: 03 Product
+		lineageTag: 9cc12abe-e00a-381c-8dde-05e2115be3ce
+
+	measure 'Deep-Discount Net Sales (>40%)' = CALCULATE ( [Net Sales], Fact_OrderItems[discount_percentage] > 0.4 )
+		formatString: #,0.0,,"M"
+		displayFolder: 03 Product
+		lineageTag: 81cddbdc-42e0-ca89-8d7b-1b28f039ed27
+
+	measure 'Deep-Discount Margin %' = CALCULATE ( [Profit Margin %], Fact_OrderItems[discount_percentage] > 0.4 )
+		formatString: 0.0%
+		displayFolder: 03 Product
+		lineageTag: 32e90a9d-fb1d-37ed-1adc-ef94a07b2c5f
+
+	measure 'Margin vs Overall (pts)' = ( [Profit Margin %] - CALCULATE ( [Profit Margin %], ALLSELECTED () ) ) * 100
+		formatString: +0.0;-0.0
+		displayFolder: 03 Product
+		lineageTag: c57c1010-6fb3-72dd-b2b7-a708eacadeb6
+
+	measure 'Product Rank' = RANKX ( ALLSELECTED ( Dim_Product[product_id] ), [Net Sales], , DESC, DENSE )
+		formatString: 0
+		displayFolder: 03 Product
+		lineageTag: 7d756ff9-2078-b611-df2e-ddb23fcee2b5
+
+	measure 'Top Category' = MAXX ( TOPN ( 1, ALLSELECTED ( Dim_Product[product_category] ), [Net Sales] ), Dim_Product[product_category] )
+		displayFolder: 03 Product
+		lineageTag: b1cd5991-c8e1-150f-1228-5f8145ed9a15
+
+	measure 'Active Customers' =
+			CALCULATE (
+			    DISTINCTCOUNT ( Dim_Orders[customer_id] ),
+			    CROSSFILTER ( Fact_OrderItems[order_id], Dim_Orders[order_id], BOTH ),
+			    Dim_Orders[order_status] = "Completed"
+			)
+		formatString: #,0
+		displayFolder: 04 Customer
+		lineageTag: 9a12ca92-b97d-010c-5f58-e5fce8851b33
+
+	measure 'New Customers' =
+			VAR d0 = MIN ( Dim_Date[Date] )
+			VAR d1 = MAX ( Dim_Date[Date] )
+			RETURN
+			CALCULATE ( DISTINCTCOUNT ( Dim_Customer[customer_id] ),
+			    Dim_Customer[First Order Date] >= d0, Dim_Customer[First Order Date] <= d1 )
+		formatString: #,0
+		displayFolder: 04 Customer
+		lineageTag: a80990e7-86e2-d30a-ee4e-253a50f0b890
+
+	measure 'Retained Customers' =
+			VAR cur = CALCULATETABLE ( VALUES ( Dim_Orders[customer_id] ), Dim_Orders[order_status] = "Completed" )
+			VAR prev = CALCULATETABLE ( VALUES ( Dim_Orders[customer_id] ), Dim_Orders[order_status] = "Completed", SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+			RETURN COUNTROWS ( INTERSECT ( cur, prev ) )
+		formatString: #,0
+		displayFolder: 04 Customer
+		lineageTag: 6b74fd73-7cde-284c-6752-2670566ccdb6
+
+	measure 'Retention Rate %' = DIVIDE ( [Retained Customers], CALCULATE ( [Active Customers], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) ) )
+		formatString: 0.0%
+		displayFolder: 04 Customer
+		lineageTag: 8a1de989-037a-5eee-2d68-660e597bc208
+
+	measure 'Reactivated Customers' = [Active Customers] - [New Customers] - [Retained Customers]
+		formatString: #,0
+		displayFolder: 04 Customer
+		lineageTag: 1c0a6f32-bbd8-647d-cf05-ecb597c6c6c8
+
+	measure 'Repeat Customers (in period)' =
+			COUNTROWS ( FILTER ( VALUES ( Dim_Orders[customer_id] ),
+			    CALCULATE ( DISTINCTCOUNT ( Dim_Orders[order_id] ), Dim_Orders[order_status] = "Completed" ) >= 2 ) )
+		formatString: #,0
+		displayFolder: 04 Customer
+		lineageTag: d20fa4b9-5103-a028-b623-6b217b077262
+
+	measure 'Repeat Rate %' = DIVIDE ( [Repeat Customers (in period)], [Active Customers] )
+		formatString: 0.0%
+		displayFolder: 04 Customer
+		lineageTag: cf95ba9b-5863-f599-8d1a-c76f07aca4e5
+
+	measure 'Customer Count' = DISTINCTCOUNT ( Dim_Customer[customer_id] )
+		formatString: #,0
+		displayFolder: 04 Customer
+		lineageTag: 230713e0-e81a-64f2-2e5f-2094b5076d6a
+
+	measure 'Net Sales per Active Customer' = DIVIDE ( [Net Sales], [Active Customers] )
+		formatString: #,0
+		displayFolder: 04 Customer
+		lineageTag: dee79740-e572-7cbb-97ab-296fede19f3f
+
+	measure 'Orders per Active Customer' = DIVIDE ( [Orders], [Active Customers] )
+		formatString: 0.00
+		displayFolder: 04 Customer
+		lineageTag: 44ee83b5-8499-a055-a7b8-63c59de04303
+
+	measure 'Top 10% Customer Share' =
+			VAR c = FILTER ( ADDCOLUMNS ( VALUES ( Dim_Customer[customer_id] ), "@s", [Net Sales] ), [@s] > 0 )
+			VAR n = COUNTROWS ( c )
+			RETURN DIVIDE ( SUMX ( TOPN ( ROUNDUP ( n * 0.1, 0 ), c, [@s], DESC ), [@s] ), SUMX ( c, [@s] ) )
+		formatString: 0.0%
+		displayFolder: 04 Customer
+		lineageTag: 613aefb2-e09d-f1b0-8ef7-34633cee74f5
+
+	measure 'Returned Net Sales' = CALCULATE ( SUM ( Fact_OrderItems[Line Net Sales] ), Dim_Orders[order_status] = "Returned" )
+		formatString: #,0.0,,"M"
+		displayFolder: 05 Service and Risk
+		lineageTag: 76bec91c-25f6-caf0-5d61-9c2204573c41
+
+	measure 'Return Rate %' =
+			DIVIDE (
+			    CALCULATE ( DISTINCTCOUNT ( Fact_OrderItems[order_id] ), Dim_Orders[order_status] = "Returned" ),
+			    CALCULATE ( DISTINCTCOUNT ( Fact_OrderItems[order_id] ), Dim_Orders[order_status] IN { "Completed", "Returned" } )
+			)
+		formatString: 0.0%
+		displayFolder: 05 Service and Risk
+		lineageTag: a2c61491-e605-a1c5-2175-8aa28911a2b0
+
+	measure 'Cancelled Net Sales' = CALCULATE ( SUM ( Fact_OrderItems[Line Net Sales] ), Dim_Orders[order_status] = "Cancelled" )
+		formatString: #,0.0,,"M"
+		displayFolder: 05 Service and Risk
+		lineageTag: 552d0124-833b-dbce-618a-e05828e16fd1
+
+	measure 'Pending Net Sales (pipeline)' = CALCULATE ( SUM ( Fact_OrderItems[Line Net Sales] ), Dim_Orders[order_status] = "Pending" )
+		formatString: #,0.0,,"M"
+		displayFolder: 05 Service and Risk
+		lineageTag: 1342a377-d72c-b251-df94-4122cd75029f
+
+	measure 'Orders (Any Status)' = DISTINCTCOUNT ( Fact_OrderItems[order_id] )
+		formatString: #,0
+		displayFolder: 05 Service and Risk
+		lineageTag: 701a37f7-e789-88f9-d58a-69b51db7bd6a
+
+	measure 'Order Status Share %' = DIVIDE ( [Orders (Any Status)], CALCULATE ( [Orders (Any Status)], ALLSELECTED ( Dim_Orders[order_status] ) ) )
+		formatString: 0.0%
+		displayFolder: 05 Service and Risk
+		lineageTag: 8aa0bc33-c0e0-766f-df66-c81e4b69f034
+
+	measure 'Delayed Delivery %' = DIVIDE ( CALCULATE ( DISTINCTCOUNT ( Fact_OrderItems[order_id] ), Dim_Orders[order_status] = "Completed", Dim_Orders[delivery_status] = "Delayed" ), [Orders] )
+		formatString: 0.0%
+		displayFolder: 05 Service and Risk
+		lineageTag: 3e1de5e3-159c-edb9-76d3-4b6e14971555
+
+	measure 'Avg Customer Rating' = CALCULATE ( AVERAGE ( Dim_Orders[customer_rating] ), Dim_Orders[order_status] = "Completed" )
+		formatString: 0.00
+		displayFolder: 05 Service and Risk
+		lineageTag: ee8e39ce-09e1-a9b5-e35f-df4fa88fc72c
+
+	measure 'Net Sales at Payment Risk' = CALCULATE ( [Net Sales], Dim_Orders[payment_status] = "Pending" )
+		formatString: #,0.0,,"M"
+		displayFolder: 05 Service and Risk
+		lineageTag: 5fd672d8-58de-8389-5d67-d12149230282
+
+	measure 'Top Country Share' = DIVIDE ( MAXX ( ALLSELECTED ( Dim_Customer[customer_country] ), [Net Sales] ), CALCULATE ( [Net Sales], ALLSELECTED () ) )
+		formatString: 0.0%
+		displayFolder: 05 Service and Risk
+		lineageTag: f400593b-f985-8d9a-224b-dabebe36b43e
+
+	measure 'Tax Collected' = CALCULATE ( SUM ( Fact_OrderItems[tax_amount] ), Dim_Orders[order_status] = "Completed" )
+		formatString: #,0
+		isHidden
+		displayFolder: 99 Reconciliation
+		lineageTag: dd93a7fb-9288-897a-8866-a8a1c1961504
+
+	measure 'Source Profit' = CALCULATE ( SUM ( Fact_OrderItems[src_profit] ), Dim_Orders[order_status] = "Completed" )
+		formatString: #,0
+		isHidden
+		displayFolder: 99 Reconciliation
+		lineageTag: 59544435-d428-089f-3173-d62ffa67a712
+
+	measure 'Net Sales (M)' = DIVIDE ( [Net Sales], 1000000 )
+		formatString: #,0.0 "M"
+		displayFolder: 01 Core
+		lineageTag: ac5b6145-c1a1-4145-8a41-31b657a3c4b6
+
+	measure 'Discounts (M)' = DIVIDE ( [Discounts], 1000000 )
+		formatString: #,0.0 "M"
+		displayFolder: 01 Core
+		lineageTag: 32fb7143-95b2-4dd9-87b7-7f3a6a7ce16e
+
+	measure 'Profit (M)' = DIVIDE ( [Profit], 1000000 )
+		formatString: #,0.0 "M"
+		displayFolder: 01 Core
+		lineageTag: 6e5df94f-104a-445b-b56d-8690ea8c7abe
+
+	measure 'Deep-Discount Net Sales (M)' = DIVIDE ( [Deep-Discount Net Sales (>40%)], 1000000 )
+		formatString: #,0.0 "M"
+		displayFolder: 03 Product
+		lineageTag: 7a7e53b5-ddfd-464a-9a00-37ff0ed913c9
+
+	measure 'Loss-Making Line Profit (M)' = DIVIDE ( [Loss-Making Line Profit], 1000000 )
+		formatString: #,0.0 "M"
+		displayFolder: 03 Product
+		lineageTag: 5d43561b-b634-4f7e-bb92-ded91614db9c
+
+	measure 'Avg Order Value (K)' = DIVIDE ( [Avg Order Value], 1000 )
+		formatString: #,0.0 "K"
+		displayFolder: 01 Core
+		lineageTag: e4f92f14-022d-4197-b982-ea88eff70b6c
+
+	measure 'Net Sales per Active Customer (K)' = DIVIDE ( [Net Sales per Active Customer], 1000 )
+		formatString: #,0.0 "K"
+		displayFolder: 04 Customer
+		lineageTag: 8512f885-9807-4259-a769-168a8fd5311d
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 972a22fe-813b-f175-3ee5-904af6d2c92f
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+					Source = #table(type table [Placeholder = text], {})
+				in
+					Source
+
